@@ -3,3 +3,4 @@ requirements
 LINUX os,
 ,NASM 
 ,LD
+Mandlebrot.bf was taken from https://github.com/rdebath/Brainfuck/blob/master/testing/Mandelbrot.b
