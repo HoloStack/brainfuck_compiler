@@ -26,18 +26,18 @@ void generate_x86_64(FILE *input, FILE *output) {
             case '-': fprintf(output, "    dec byte [rsi]\n"); break;
             case '.':
                 fprintf(output,
-                        "    mov rax, 1\n"       // sys_write
-                        "    mov rdi, 1\n"       // stdout
-                        "    mov rsi, rsi\n"     // pointer to char
-                        "    mov rdx, 1\n"       // length = 1
+                        "    mov rax, 1\n"
+                        "    mov rdi, 1\n"
+                        //"    mov rsi, rsi\n" redundent
+                        "    mov rdx, 1\n"
                         "    syscall\n");
                 break;
             case ',':
                 fprintf(output,
-                        "    mov rax, 0\n"       // sys_read
-                        "    mov rdi, 0\n"       // stdin
-                        "    mov rsi, rsi\n"     // pointer to memory
-                        "    mov rdx, 1\n"       // read 1 byte
+                        "    mov rax, 0\n"
+                        "    mov rdi, 0\n" 
+                        //"    mov rsi, rsi\n" redundent
+                        "    mov rdx, 1\n"
                         "    syscall\n");
                 break;
             case '[':
@@ -79,19 +79,25 @@ void generate_x86_64(FILE *input, FILE *output) {
 }
 
 void assemble_and_run(const char *assembly_file) {
-    char obj_file[256], exe_file[256];
+    char obj_file[256], exe_file[256], ld_cmd[512];
 
-    snprintf(obj_file, sizeof(obj_file), "%s.o", assembly_file);
-    snprintf(exe_file, sizeof(exe_file), "%s_exec", assembly_file);
+    // Limit filename length to 200 characters to prevent overflow
+    snprintf(obj_file, sizeof(obj_file) - 1, "%.200s.o", assembly_file);
+    snprintf(exe_file, sizeof(exe_file) - 1, "%.200s_exec", assembly_file);
+    
+    // Use snprintf safely
+    int written = snprintf(ld_cmd, sizeof(ld_cmd) - 1, "ld %s -o %s", obj_file, exe_file);
+    if (written >= sizeof(ld_cmd)) {
+        fprintf(stderr, "Warning: ld command truncated!\n");
+    }
 
     char choice;
     printf("Do you want to assemble and run the program? (y/n): ");
     scanf(" %c", &choice);
 
     if (choice == 'y' || choice == 'Y') {
-        char nasm_cmd[512], ld_cmd[512];
-        snprintf(nasm_cmd, sizeof(nasm_cmd), "nasm -f elf64 %s -o %s", assembly_file, obj_file);
-        snprintf(ld_cmd, sizeof(ld_cmd), "ld %s -o %s", obj_file, exe_file);
+        char nasm_cmd[512];
+        snprintf(nasm_cmd, sizeof(nasm_cmd) - 1, "nasm -f elf64 %s -o %s", assembly_file, obj_file);
 
         printf("Assembling: %s\n", nasm_cmd);
         if (system(nasm_cmd) != 0) {
@@ -107,7 +113,7 @@ void assemble_and_run(const char *assembly_file) {
 
         printf("Running: %s\n", exe_file);
         char run_cmd[300];
-        snprintf(run_cmd, sizeof(run_cmd), "./%s", exe_file);
+        snprintf(run_cmd, sizeof(run_cmd) - 1, "./%s", exe_file);
         system(run_cmd);
     } else {
         printf("Skipping assembly and execution.\n");
