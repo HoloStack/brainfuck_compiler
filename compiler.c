@@ -81,11 +81,9 @@ void generate_x86_64(FILE *input, FILE *output) {
 void assemble_and_run(const char *assembly_file) {
     char obj_file[256], exe_file[256], ld_cmd[512];
 
-    // Limit filename length to 200 characters to prevent overflow
     snprintf(obj_file, sizeof(obj_file) - 1, "%.200s.o", assembly_file);
     snprintf(exe_file, sizeof(exe_file) - 1, "%.200s_exec", assembly_file);
     
-    // Use snprintf safely
     int written = snprintf(ld_cmd, sizeof(ld_cmd) - 1, "ld %s -o %s", obj_file, exe_file);
     if (written >= sizeof(ld_cmd)) {
         fprintf(stderr, "Warning: ld command truncated!\n");
